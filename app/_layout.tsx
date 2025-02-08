@@ -1,15 +1,29 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {useEffect} from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Home from './index'; 
+import Details from './details';
+import Cart from './Cart';
+import { BookProvider } from './panier/bookProvider';
+import Panier from './panier/panier';
+import AddBook from './AddBooks';
+import EditBook from './EditBook';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+
+type RootStackParamList = {
+  index: undefined;
+  Details: { bookId: string }; 
+  AddBook: undefined;
+  EditBook: { bookId: string };
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
+
+SplashScreen.preventAutoHideAsync()
+  .then(() => console.log('SplashScreen.preventAutoHideAsync() resolved'))
+  .catch(console.warn);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -19,7 +33,15 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded) {
-      SplashScreen.hideAsync();
+      console.log('Fonts loaded');
+      const hideSplashScreen = async () => {
+        await SplashScreen.hideAsync();
+        console.log('SplashScreen.hideAsync() resolved');
+      };
+
+      setTimeout(hideSplashScreen, 3000);
+    } else {
+      console.log('Fonts not loaded yet');
     }
   }, [loaded]);
 
@@ -28,12 +50,39 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <BookProvider>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="index"
+          component={Home}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Details"
+          component={Details}
+          options={{ title: 'Book Details' }}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={Cart}
+          options={{ title: 'Panier' }}
+        />
+        <Stack.Screen
+          name="Panier"
+          component={Panier}
+          options={{ title: 'Panier' }}
+        />
+        <Stack.Screen
+          name="AddBook"
+          component={AddBook}
+          options={{ title: 'Add Book' }}
+        />
+        <Stack.Screen
+          name="EditBook"
+          component={EditBook}
+          options={{ title: 'Edit Book' }}
+        />
+      </Stack.Navigator>
+    </BookProvider>
   );
 }
